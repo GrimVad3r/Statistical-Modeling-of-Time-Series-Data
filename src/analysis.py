@@ -197,7 +197,7 @@ class TimeSeriesAnalyzer:
         plt.ylabel('Price (USD per barrel)')
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig('01_brent_price_series.png', dpi=300, bbox_inches='tight')
+        plt.savefig('./figures/01_brent_price_series.png', dpi=300, bbox_inches='tight')
         plt.show()
         self.logger.info('Price series plot saved')
     
@@ -222,7 +222,7 @@ class TimeSeriesAnalyzer:
         axes[1].grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('02_log_returns_volatility.png', dpi=300, bbox_inches='tight')
+        plt.savefig('./figures/02_log_returns_volatility.png', dpi=300, bbox_inches='tight')
         plt.show()
         self.logger.info('Log returns and volatility plot saved')
     

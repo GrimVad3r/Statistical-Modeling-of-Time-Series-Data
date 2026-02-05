@@ -54,7 +54,7 @@ class DataLoader:
         try:
             # Convert date column
             self.logger.info('Converting Date column to datetime format')
-            self.df['Date'] = pd.to_datetime(self.df['Date'], format='%d-%b-%y')
+            self.df['Date'] = pd.to_datetime(self.df['Date'], errors='coerce')
             
             # Sort by date
             self.logger.info('Sorting data by date')
