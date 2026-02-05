@@ -1,3 +1,8 @@
 data/
 notebooks/task_1_analysis.log
 notebooks/*.log
+<<<<<<< HEAD
+=======
+notebooks/task_1_analysis.log
+notebooks/task_1_analysis.log
+>>>>>>> task-1
