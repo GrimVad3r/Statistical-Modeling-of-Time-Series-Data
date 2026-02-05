@@ -1,2 +1,3 @@
 data/
 notebooks/task_1_analysis.log
+notebooks/*.log
