@@ -24,8 +24,9 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
+  display: block;
   place-items: center;
+  background-color: #f8f9fa;
   /*min-width: 320px;
   min-height: 100vh;*/
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -68,14 +69,6 @@ button:focus-visible {
   }
 }
 @import "tailwindcss";
-
-html, body, #root, #root > div {
-  max-width: none !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  box-sizing: border-box;
-}
 
 #root > div {
   min-height: 100vh;

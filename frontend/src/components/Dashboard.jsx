@@ -102,9 +102,9 @@ const Dashboard = () => {
   }
 
   return (
-  <div className="w-full aspect-[4/3] min-h-[400px] max-h-[700px] lg:aspect-[16/9]">
+  <div className="min-h-screen bg-gray-50 py-8">
       {/* No max-w, no container – full bleed */}
-      <div className="px-4 sm:px-6 lg:px-12 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-10">
           Brent Oil Prices – Change Point Analysis
         </h1>
@@ -140,7 +140,7 @@ const Dashboard = () => {
       <div className="bg-white rounded-xl shadow-lg mb-12 overflow-hidden">
         <div className="p-6 lg:p-10"></div>
           <h2 className="text-3xl font-bold mb-8">Historical Price Trends</h2>
-          <div className="w-full h-[70vh] min-h-[500px]"> {/* 70% of viewport height */}
+          <div className="w-full h-[500px]"> {/* 70% of viewport height */}
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={priceData}

@@ -46,10 +46,11 @@
 @tailwind utilities;
 
 html, body, #root, #root > div {
-  max-width: none !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  max-width: 1440px !important;
+  width: 95% !important;
+  margin: 2rem auto !important;
+  padding: 0 2rem !important;
+  text-align: center;
   box-sizing: border-box;
 }
 

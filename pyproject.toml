@@ -20,4 +20,7 @@ dependencies = [
     "seaborn>=0.13.2",
     "seaborn>=0.13.2",
     "statsmodels>=0.14.6",
+    "flask>=3.1.2",
+    "jsonify>=0.5",
+    "flask-cors>=6.0.2",
 ]
