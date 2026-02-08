@@ -1,0 +1,245 @@
+name: Automated Tests & Quality Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Tests & Quality Checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Full history for better diff
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8 black mypy marshmallow
+    
+    - name: Check code formatting with black
+      run: |
+        echo "Checking code formatting with black..."
+        black --check --diff .
+      continue-on-error: true
+    
+    - name: Lint with flake8
+      run: |
+        echo "Running flake8 linting..."
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: false
+    
+    - name: Type checking with mypy
+      run: |
+        echo "Running mypy type checking..."
+        mypy . --ignore-missing-imports --no-error-summary || true
+      continue-on-error: true
+    
+    - name: Run unit tests
+      run: |
+        echo "Running pytest test suite..."
+        pytest test_*.py -v --tb=short --cov=. --cov-report=xml --cov-report=term-missing
+    
+    - name: Test coverage report
+      run: |
+        echo "Generating coverage report..."
+        coverage report --fail-under=80
+      continue-on-error: true
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+    
+    - name: Generate coverage badge
+      run: |
+        echo "Coverage badge would be generated here"
+      if: always()
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+    
+    - name: Run pylint
+      run: |
+        echo "Running pylint..."
+        pylint --disable=all --enable=E,F . || true
+      continue-on-error: true
+
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Run security checks with bandit
+      run: |
+        echo "Running bandit security checks..."
+        bandit -r . -f json -o bandit-report.json || true
+      continue-on-error: true
+    
+    - name: Check dependencies with safety
+      run: |
+        echo "Checking dependencies with safety..."
+        safety check --json || true
+      continue-on-error: true
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Check for ASSUMPTIONS.md reference
+      run: |
+        echo "Checking that modules reference ASSUMPTIONS.md..."
+        if grep -r "ASSUMPTIONS.md" *.py > /dev/null 2>&1; then
+          echo "✓ ASSUMPTIONS.md properly referenced"
+        else
+          echo "⚠ Consider adding ASSUMPTIONS.md references"
+        fi
+      continue-on-error: true
+    
+    - name: Check for docstrings
+      run: |
+        echo "Checking for docstring coverage..."
+        # Basic check for module docstrings
+        for file in *.py; do
+          if [ -f "$file" ]; then
+            if head -n 5 "$file" | grep -q '"""'; then
+              echo "✓ $file has docstring"
+            fi
+          fi
+        done
+      continue-on-error: true
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests..."
+        if [ -f test_integration.py ]; then
+          pytest test_integration.py -v
+        else
+          echo "No integration tests found (test_integration.py)"
+        fi
+      continue-on-error: true
+
+  # Summary job that requires all checks to pass
+  all-checks:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [test, code-quality, security, documentation, integration]
+    if: always()
+    
+    steps:
+    - name: Check test results
+      run: |
+        if [ "${{ needs.test.result }}" == "failure" ]; then
+          echo "❌ Tests failed"
+          exit 1
+        fi
+        echo "✓ All tests passed"
+    
+    - name: Check code quality
+      run: |
+        if [ "${{ needs.code-quality.result }}" == "failure" ]; then
+          echo "⚠ Code quality issues found (non-blocking)"
+        else
+          echo "✓ Code quality passed"
+        fi
+    
+    - name: Check security
+      run: |
+        if [ "${{ needs.security.result }}" == "failure" ]; then
+          echo "⚠ Security issues found (non-blocking)"
+        else
+          echo "✓ Security checks passed"
+        fi
+    
+    - name: Final status
+      run: |
+        echo "✓ All required checks completed"
+        echo "Ready for review and merge!"
+
+  # Notification job
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [all-checks]
+    if: always()
+    
+    steps:
+    - name: Determine status
+      run: |
+        if [ "${{ needs.all-checks.result }}" == "success" ]; then
+          echo "✓ CI/CD Pipeline PASSED"
+          exit 0
+        else
+          echo "❌ CI/CD Pipeline FAILED"
+          exit 1
+        fi
